@@ -37,6 +37,7 @@ class CartActor extends Actor {
 
   def empty: Receive = LoggingReceive{
     case AddItem(item) => context become nonEmpty(Cart.empty.addItem(item), scheduleTimer)
+    case message => log info s"unknown message: $message"
   }
 
   def nonEmpty(cart: Cart, timer: Cancellable): Receive = LoggingReceive{
@@ -45,16 +46,18 @@ class CartActor extends Actor {
     case StartCheckout => timer.cancel()
       context become inCheckout(cart)
     case RemoveItem(item) if !cart.contains(item) =>
-    case RemoveItem(_) if cart.size == 1=> timer.cancel()
-      context become empty
-    case RemoveItem(item) => timer.cancel()
+    case RemoveItem(item) if cart.size != 1 => timer.cancel()
       context become nonEmpty(cart.removeItem(item), scheduleTimer)
+    case RemoveItem(item) => timer.cancel()
+      context become empty
     case ExpireCart => context become empty
+    case message => log info s"unknown message: $message"
   }
 
   def inCheckout(cart: Cart): Receive = LoggingReceive{
     case ConfirmCheckoutCancelled => context become nonEmpty(cart, scheduleTimer)
     case ConfirmCheckoutClosed => context become empty
+    case message => log info s"unknown message: $message"
   }
 
 }

@@ -41,13 +41,16 @@ class Checkout extends Actor {
 
 
   def receive: Receive = LoggingReceive{
-    case StartCheckout => context become selectingDelivery(scheduler.scheduleOnce(checkoutTimerDuration, self, ExpireCheckout))
+    case StartCheckout => context become
+      selectingDelivery(scheduler.scheduleOnce(checkoutTimerDuration, self, ExpireCheckout))
+    case message => log info s"unknown message: $message"
   }
 
   def selectingDelivery(timer: Cancellable): Receive = LoggingReceive{
     case SelectDeliveryMethod(method) => context become selectingPaymentMethod(timer)
     case CancelCheckout => context become cancelled
     case ExpireCheckout => context become cancelled
+    case message => log info s"unknown message: $message"
   }
 
   def selectingPaymentMethod(timer: Cancellable): Receive = LoggingReceive{
@@ -55,6 +58,7 @@ class Checkout extends Actor {
       context become processingPayment(scheduler.scheduleOnce(paymentTimerDuration, self, ExpirePayment))
     case CancelCheckout => context become cancelled
     case ExpireCheckout => context become cancelled
+    case message => log info s"unknown message: $message"
   }
 
   def processingPayment(timer: Cancellable): Receive = LoggingReceive{
@@ -62,6 +66,7 @@ class Checkout extends Actor {
       context become closed
     case CancelCheckout => context become cancelled
     case ExpirePayment => context become cancelled
+    case message => log info s"unknown message: $message"
   }
 
   def cancelled: Receive = LoggingReceive{

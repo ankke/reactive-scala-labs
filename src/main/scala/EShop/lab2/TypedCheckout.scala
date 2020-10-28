@@ -39,6 +39,7 @@ class TypedCheckout {
       message match {
         case StartCheckout =>
           selectingDelivery(context.scheduleOnce(checkoutTimerDuration, context.self, ExpireCheckout))
+        case _ => Behaviors.same
       }
   )
 
@@ -46,6 +47,7 @@ class TypedCheckout {
     case SelectDeliveryMethod(method) => selectingPaymentMethod(timer)
     case CancelCheckout => cancelled
     case ExpireCheckout => cancelled
+    case _ => Behaviors.same
   }
 
   def selectingPaymentMethod(timer: Cancellable): Behavior[TypedCheckout.Command] = Behaviors.receive((context, message)=>
@@ -54,6 +56,7 @@ class TypedCheckout {
         processingPayment(context.scheduleOnce(paymentTimerDuration, context.self, ExpirePayment))
       case CancelCheckout => cancelled
       case ExpireCheckout => cancelled
+      case _ => Behaviors.same
     }
   )
 
@@ -62,6 +65,7 @@ class TypedCheckout {
       closed
     case CancelCheckout => cancelled
     case ExpirePayment => cancelled
+    case _ => Behaviors.same
   }
 
   def cancelled: Behavior[TypedCheckout.Command] = Behaviors.stopped
