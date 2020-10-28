@@ -1,7 +1,7 @@
 package EShop.lab2
 
 import akka.actor.{Actor, ActorRef, Cancellable, Props}
-import akka.event.Logging
+import akka.event.{Logging, LoggingReceive}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -35,11 +35,11 @@ class CartActor extends Actor {
 
   def receive: Receive = empty
 
-  def empty: Receive = {
+  def empty: Receive = LoggingReceive{
     case AddItem(item) => context become nonEmpty(Cart.empty.addItem(item), scheduleTimer)
   }
 
-  def nonEmpty(cart: Cart, timer: Cancellable): Receive = {
+  def nonEmpty(cart: Cart, timer: Cancellable): Receive = LoggingReceive{
     case AddItem(item) => timer.cancel()
       context become nonEmpty(cart.addItem(item), scheduleTimer)
     case StartCheckout => timer.cancel()
@@ -52,7 +52,7 @@ class CartActor extends Actor {
     case ExpireCart => context become empty
   }
 
-  def inCheckout(cart: Cart): Receive = {
+  def inCheckout(cart: Cart): Receive = LoggingReceive{
     case ConfirmCheckoutCancelled => context become nonEmpty(cart, scheduleTimer)
     case ConfirmCheckoutClosed => context become empty
   }
