@@ -31,6 +31,7 @@ object Checkout {
 }
 
 class Checkout extends Actor {
+  import context.dispatcher
 
   private val scheduler = context.system.scheduler
   private val log       = Logging(context.system, this)
@@ -38,16 +39,37 @@ class Checkout extends Actor {
   val checkoutTimerDuration = 1 seconds
   val paymentTimerDuration  = 1 seconds
 
-  def receive: Receive = ???
 
-  def selectingDelivery(timer: Cancellable): Receive = ???
+  def receive: Receive = {
+    case StartCheckout => context become selectingDelivery(scheduler.scheduleOnce(checkoutTimerDuration, self, ExpireCheckout))
+  }
 
-  def selectingPaymentMethod(timer: Cancellable): Receive = ???
+  def selectingDelivery(timer: Cancellable): Receive = {
+    case SelectDeliveryMethod(method) => context become selectingPaymentMethod(timer)
+    case CancelCheckout => context become cancelled
+    case ExpireCheckout => context become cancelled
+  }
 
-  def processingPayment(timer: Cancellable): Receive = ???
+  def selectingPaymentMethod(timer: Cancellable): Receive = {
+    case SelectPayment(payment) => timer.cancel()
+      context become processingPayment(scheduler.scheduleOnce(paymentTimerDuration, self, ExpirePayment))
+    case CancelCheckout => context become cancelled
+    case ExpireCheckout => context become cancelled
+  }
 
-  def cancelled: Receive = ???
+  def processingPayment(timer: Cancellable): Receive = {
+    case ConfirmPaymentReceived => timer.cancel()
+      context become closed
+    case CancelCheckout => context become cancelled
+    case ExpirePayment => context become cancelled
+  }
 
-  def closed: Receive = ???
+  def cancelled: Receive = {
+    case _ =>
+  }
+
+  def closed: Receive = {
+    case _ =>
+  }
 
 }

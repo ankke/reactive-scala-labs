@@ -45,7 +45,7 @@ class CartActor extends Actor {
     case StartCheckout => timer.cancel()
       context become inCheckout(cart)
     case RemoveItem(item) if !cart.contains(item) =>
-    case RemoveItem(item) if cart.size == 1=> timer.cancel()
+    case RemoveItem(_) if cart.size == 1=> timer.cancel()
       context become empty
     case RemoveItem(item) => timer.cancel()
       context become nonEmpty(cart.removeItem(item), scheduleTimer)
