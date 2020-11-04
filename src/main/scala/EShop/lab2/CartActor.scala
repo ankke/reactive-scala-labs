@@ -36,29 +36,33 @@ class CartActor extends Actor {
 
   def receive: Receive = empty
 
-  def empty: Receive = LoggingReceive{
+  def empty: Receive = LoggingReceive {
     case AddItem(item) => context become nonEmpty(Cart.empty.addItem(item), scheduleTimer)
-    case message => log info s"unknown message: $message"
+    case message       => log info s"unknown message: $message"
   }
 
-  def nonEmpty(cart: Cart, timer: Cancellable): Receive = LoggingReceive{
-    case AddItem(item) => timer.cancel()
+  def nonEmpty(cart: Cart, timer: Cancellable): Receive = LoggingReceive {
+    case AddItem(item) =>
+      timer.cancel()
       context become nonEmpty(cart.addItem(item), scheduleTimer)
-    case StartCheckout => timer.cancel()
+    case StartCheckout =>
+      timer.cancel()
       context become inCheckout(cart)
     case RemoveItem(item) if !cart.contains(item) =>
-    case RemoveItem(item) if cart.size != 1 => timer.cancel()
+    case RemoveItem(item) if cart.size != 1 =>
+      timer.cancel()
       context become nonEmpty(cart.removeItem(item), scheduleTimer)
-    case RemoveItem(item) => timer.cancel()
+    case RemoveItem(item) =>
+      timer.cancel()
       context become empty
     case ExpireCart => context become empty
-    case message => log info s"unknown message: $message"
+    case message    => log info s"unknown message: $message"
   }
 
-  def inCheckout(cart: Cart): Receive = LoggingReceive{
+  def inCheckout(cart: Cart): Receive = LoggingReceive {
     case ConfirmCheckoutCancelled => context become nonEmpty(cart, scheduleTimer)
-    case ConfirmCheckoutClosed => context become empty
-    case message => log info s"unknown message: $message"
+    case ConfirmCheckoutClosed    => context become empty
+    case message                  => log info s"unknown message: $message"
   }
 
 }
