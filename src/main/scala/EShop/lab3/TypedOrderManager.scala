@@ -105,13 +105,12 @@ class TypedOrderManager {
     message match {
       case Pay(sender) =>
         paymentActorRef ! TypedPayment.DoPayment
-        sender ! Done
-        Behaviors.same
+        inPayment(paymentActorRef, sender)
       case ConfirmPaymentReceived =>
         senderRef ! Done
         finished
       case _ =>
-        context.log.info("Received unknown message: {}", message)
+        context.log.info(" inPayment 2 Received unknown message: {}", message)
         Behaviors.same
     }
   }
