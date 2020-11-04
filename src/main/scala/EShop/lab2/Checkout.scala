@@ -27,12 +27,14 @@ object Checkout {
   case object CheckOutClosed                   extends Event
   case class PaymentStarted(payment: ActorRef) extends Event
 
-  def props(cart: ActorRef) = Props(new Checkout())
+  def props(cart: ActorRef) = Props(new Checkout(cart))
 }
 
-class Checkout extends Actor {
-  import context.dispatcher
 
+class Checkout(
+  cartActor: ActorRef
+) extends Actor {
+  import context.dispatcher
   private val scheduler = context.system.scheduler
   private val log       = Logging(context.system, this)
 
