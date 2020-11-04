@@ -1,5 +1,6 @@
 package EShop.lab3
 
+import EShop.lab2.TypedCartActor.ConfirmCheckoutClosed
 import EShop.lab2.{TypedCartActor, TypedCheckout}
 import akka.actor.Cancellable
 import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ScalaTestWithActorTestKit}
@@ -26,14 +27,22 @@ class TypedCheckoutTest
   it should "Send close confirmation to cart" in {
     val probe          = testKit.createTestProbe[String]
     val cartActorProbe = testKit.createTestProbe[TypedCartActor.Command]
+    val orderManagerActorProbe = testKit.createTestProbe[TypedOrderManager.Command]
     val checkoutActor  = checkoutActorWithResponseOnStateChange(testKit, probe.ref, cartActorProbe.ref)
 
     probe.expectMessage(emptyMsg)
     checkoutActor ! StartCheckout
     probe.expectMessage(selectingDeliveryMsg)
+    checkoutActor ! SelectDeliveryMethod("order")
+    probe.expectMessage(selectingPaymentMethodMsg)
+    checkoutActor ! SelectPayment("paypal", orderManagerActorProbe.ref)
+    probe.expectMessage(processingPaymentMsg)
+    checkoutActor ! ConfirmPaymentReceived
+    cartActorProbe.expectMessage(ConfirmCheckoutClosed)
   }
 
 }
+
 object TypedCheckoutTest {
 
   val emptyMsg                  = "empty"
@@ -76,17 +85,6 @@ object TypedCheckoutTest {
             super.processingPayment(timer)
           })
 
-        override def cancelled: Behavior[TypedCheckout.Command] =
-          Behaviors.setup(_ => {
-            probe ! cancelledMsg
-            super.cancelled
-          })
-
-        override def closed: Behavior[TypedCheckout.Command] =
-          Behaviors.setup(_ => {
-            probe ! closedMsg
-            super.closed
-          })
       }
       checkout.start
     }
