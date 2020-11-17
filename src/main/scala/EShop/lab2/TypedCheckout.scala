@@ -1,5 +1,7 @@
 package EShop.lab2
 
+import java.time.Instant
+
 import EShop.lab3.{TypedOrderManager, TypedPayment}
 import akka.actor.Cancellable
 import akka.actor.typed.scaladsl.Behaviors
@@ -58,8 +60,10 @@ class TypedCheckout(
   def selectingDelivery(timer: Cancellable): Behavior[TypedCheckout.Command] = Behaviors.receive { (context, message) =>
     message match {
       case SelectDeliveryMethod(method) => selectingPaymentMethod(timer)
-      case CancelCheckout               => cancelled
-      case ExpireCheckout               => cancelled
+      case CancelCheckout =>
+        timer.cancel()
+        cancelled
+      case ExpireCheckout => cancelled
       case _ =>
         context.log.info("Received unknown message: {}", message)
         Behaviors.same
@@ -76,7 +80,9 @@ class TypedCheckout(
               context.spawn(new TypedPayment(payment, orderManager, context.self).start, "payment")
             )
             processingPayment(context.scheduleOnce(paymentTimerDuration, context.self, ExpirePayment))
-          case CancelCheckout => cancelled
+          case CancelCheckout =>
+            timer.cancel()
+            cancelled
           case ExpireCheckout => cancelled
           case _ =>
             context.log.info("Received unknown message: {}", message)
@@ -90,8 +96,10 @@ class TypedCheckout(
         timer.cancel()
         cartActor ! TypedCartActor.ConfirmCheckoutClosed
         closed
-      case CancelCheckout => cancelled
-      case ExpirePayment  => cancelled
+      case CancelCheckout =>
+        timer.cancel()
+        cancelled
+      case ExpirePayment => cancelled
       case _ =>
         context.log.info("Received unknown message: {}", message)
         Behaviors.same
