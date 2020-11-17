@@ -1,12 +1,12 @@
 package EShop.lab2
 
+import EShop.lab3.TypedOrderManager
 import akka.actor.Cancellable
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
-import scala.language.postfixOps
 import scala.concurrent.duration._
-import EShop.lab3.TypedOrderManager
+import scala.language.postfixOps
 
 object TypedCartActor {
 
@@ -34,28 +34,48 @@ class TypedCartActor {
 
   def start: Behavior[TypedCartActor.Command] = empty
 
-  def empty: Behavior[TypedCartActor.Command] = Behaviors.receive((context, message) =>
-    message match {
-      case AddItem(item) => nonEmpty(Cart.empty.addItem(item), scheduleTimer(context))
-      case _ => Behaviors.same
-    }
-  )
-
-  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[TypedCartActor.Command] = Behaviors.receiveMessage {
-        case AddItem(item) => nonEmpty(cart.addItem(item), timer)
-        case RemoveItem(item) if !cart.contains(item) => Behaviors.same
-        case RemoveItem(_) if cart.size == 1 => empty
-        case RemoveItem(item) => nonEmpty(cart.removeItem(item), timer)
-        case StartCheckout => inCheckout(cart)
-        case ExpireCart    => empty
-        case _ => Behaviors.same
+  def empty: Behavior[TypedCartActor.Command] =
+    Behaviors.receive(
+      (context, message) =>
+        message match {
+          case AddItem(item) => nonEmpty(Cart.empty.addItem(item), scheduleTimer(context))
+          case _ =>
+            context.log.info("Received unknown message: {}", message)
+            Behaviors.same
       }
+    )
 
-  def inCheckout(cart: Cart): Behavior[TypedCartActor.Command] = Behaviors.receive ((context, message) =>
-    message match {
-      case ConfirmCheckoutCancelled => nonEmpty(cart, scheduleTimer(context))
-      case ConfirmCheckoutClosed => empty
-      case _ => Behaviors.same
-    }
-  )
+  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[TypedCartActor.Command] = Behaviors.receive {
+    (context, message) =>
+      context.log.info("nonEmpty Received message: {}", message)
+      message match {
+        case AddItem(item)                            => nonEmpty(cart.addItem(item), timer)
+        case RemoveItem(item) if !cart.contains(item) => Behaviors.same
+        case RemoveItem(_) if cart.size == 1          => empty
+        case RemoveItem(item)                         => nonEmpty(cart.removeItem(item), timer)
+        case StartCheckout(orderManager) =>
+          context.log.info("nonEmpty Received message: {}", message)
+          val checkoutActor = context.spawn(new TypedCheckout(context.self).start, "checkout")
+          orderManager ! TypedOrderManager.ConfirmCheckoutStarted(checkoutActor)
+          context.log.info("nonEmpty Received message: {}", message)
+          checkoutActor ! TypedCheckout.StartCheckout
+          inCheckout(cart)
+        case ExpireCart => empty
+        case _ =>
+          context.log.info("Received unknown message: {}", message)
+          Behaviors.same
+      }
+  }
+
+  def inCheckout(cart: Cart): Behavior[TypedCartActor.Command] =
+    Behaviors.receive(
+      (context, message) =>
+        message match {
+          case ConfirmCheckoutCancelled => nonEmpty(cart, scheduleTimer(context))
+          case ConfirmCheckoutClosed    => empty
+          case _ =>
+            context.log.info("Received unknown message: {}", message)
+            Behaviors.same
+      }
+    )
 }
