@@ -3,6 +3,8 @@ package EShop.lab3
 import EShop.lab2.TypedCheckout
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
+import EShop.lab3.TypedPayment.{Event}
+
 
 object TypedPayment {
 
@@ -11,12 +13,13 @@ object TypedPayment {
 
   sealed trait Event
   case object PaymentConfirmed extends Event
+  case object ConfirmPaymentReceived extends Event
 
 }
 
 class TypedPayment(
   method: String,
-  orderManager: ActorRef[TypedOrderManager.Command],
+  orderManager: ActorRef[Event],
   checkout: ActorRef[TypedCheckout.Command]
 ) {
 
@@ -26,7 +29,7 @@ class TypedPayment(
     message match {
       case DoPayment =>
         checkout ! TypedCheckout.ConfirmPaymentReceived
-        orderManager ! TypedOrderManager.ConfirmPaymentReceived
+        orderManager ! ConfirmPaymentReceived
         Behaviors.same
       case _ =>
         context.log.info("Received unknown message: {}", message)

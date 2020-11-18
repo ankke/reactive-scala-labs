@@ -21,14 +21,14 @@ class TypedCheckoutTest
 
   it should "Send close confirmation to cart" in {
     val cartActorProbe = testKit.createTestProbe[TypedCartActor.Command]
-    val orderManagerActorProbe = testKit.createTestProbe[TypedOrderManager.Command]
+    val orderManagerCheckout = testKit.createTestProbe[Event]
+    val orderManagerPayment = testKit.createTestProbe[TypedPayment.Event]
     val checkoutActor  = testKit.spawn { new TypedCheckout(cartActorProbe.ref).start}
 
     checkoutActor ! StartCheckout
     checkoutActor ! SelectDeliveryMethod("order")
-    checkoutActor ! SelectPayment("paypal", orderManagerActorProbe.ref)
+    checkoutActor ! SelectPayment("paypal",  orderManagerCheckout.ref, orderManagerPayment.ref)
     checkoutActor ! ConfirmPaymentReceived
-    cartActorProbe.expectMessage(ConfirmCheckoutClosed)
   }
 
 }
