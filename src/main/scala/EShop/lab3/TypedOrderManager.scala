@@ -1,7 +1,7 @@
 package EShop.lab3
 
 import EShop.lab2.{TypedCartActor, TypedCheckout}
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 
 object TypedOrderManager {
@@ -18,11 +18,30 @@ object TypedOrderManager {
 
   sealed trait Ack
   case object Done extends Ack //trivial ACK
+
+  def apply(): Behavior[TypedOrderManager.Command] = Behaviors.setup { context =>
+    new TypedOrderManager(context).start
+  }
 }
 
-class TypedOrderManager {
+class TypedOrderManager(context: ActorContext[TypedOrderManager.Command]) {
 
   import TypedOrderManager._
+
+  val cartEventAdapter: ActorRef[TypedCartActor.Event] =
+    context.messageAdapter {
+      case TypedCartActor.CheckoutStarted(checkoutRef) => ConfirmCheckoutStarted(checkoutRef)
+    }
+
+  val checkoutEventAdapter: ActorRef[TypedCheckout.Event] =
+    context.messageAdapter {
+      case TypedCheckout.PaymentStarted(paymentRef) => ConfirmPaymentStarted(paymentRef)
+    }
+
+  val paymentEventAdapter: ActorRef[TypedPayment.Event] =
+    context.messageAdapter {
+      case TypedPayment.ConfirmPaymentReceived => ConfirmPaymentReceived
+    }
 
   def start: Behavior[TypedOrderManager.Command] = uninitialized
 
@@ -49,25 +68,27 @@ class TypedOrderManager {
           cartActor ! TypedCartActor.RemoveItem(item)
           sender ! Done
           Behaviors.same
-        case Buy(sender) =>
-          cartActor ! TypedCartActor.StartCheckout(context.self)
-          inCheckout(cartActor, sender)
+        case Buy(sender) => inCheckout(cartActor, sender)
       }
   }
 
   def inCheckout(
     cartActorRef: ActorRef[TypedCartActor.Command],
     senderRef: ActorRef[Ack]
-  ): Behavior[TypedOrderManager.Command] = Behaviors.receive { (context, message) =>
-    context.log.info("inCheckout Received message: {}", message)
-    message match {
-      case ConfirmCheckoutStarted(checkoutActorRef) =>
-        senderRef ! Done
-        inCheckout(checkoutActorRef)
-      case _ =>
-        context.log.info("Received unknown message: {}", message)
-        Behaviors.same
-    }
+  ): Behavior[TypedOrderManager.Command] =
+    Behaviors.setup { _ =>
+      cartActorRef ! TypedCartActor.StartCheckout(cartEventAdapter)
+      Behaviors.receive { (context, message) =>
+        context.log.info("inCheckout Received message: {}", message)
+        message match {
+          case ConfirmCheckoutStarted(checkoutActorRef) =>
+            senderRef ! Done
+            inCheckout(checkoutActorRef)
+          case _ =>
+            context.log.info("Received unknown message: {}", message)
+            Behaviors.same
+        }
+      }
   }
 
   def inCheckout(checkoutActorRef: ActorRef[TypedCheckout.Command]): Behavior[TypedOrderManager.Command] =
@@ -76,7 +97,7 @@ class TypedOrderManager {
       message match {
         case SelectDeliveryAndPaymentMethod(delivery, payment, sender) =>
           checkoutActorRef ! TypedCheckout.SelectDeliveryMethod(delivery)
-          checkoutActorRef ! TypedCheckout.SelectPayment(payment, context.self)
+          checkoutActorRef ! TypedCheckout.SelectPayment(payment, checkoutEventAdapter, paymentEventAdapter)
           inPayment(sender)
         case _ =>
           context.log.info("Received unknown message: {}", message)

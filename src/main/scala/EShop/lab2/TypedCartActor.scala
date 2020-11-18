@@ -14,7 +14,7 @@ object TypedCartActor {
   case class AddItem(item: Any)                                                  extends Command
   case class RemoveItem(item: Any)                                               extends Command
   case object ExpireCart                                                         extends Command
-  case class StartCheckout(orderManagerRef: ActorRef[TypedOrderManager.Command]) extends Command
+  case class StartCheckout(orderManagerRef: ActorRef[Event])                     extends Command
   case object ConfirmCheckoutCancelled                                           extends Command
   case object ConfirmCheckoutClosed                                              extends Command
   case class GetItems(sender: ActorRef[Cart])                                    extends Command
@@ -71,7 +71,7 @@ class TypedCartActor {
         case StartCheckout(orderManager) =>
           context.log.info("nonEmpty Received message: {}", message)
           val checkoutActor = context.spawn(new TypedCheckout(context.self).start, "checkout")
-          orderManager ! TypedOrderManager.ConfirmCheckoutStarted(checkoutActor)
+          orderManager ! CheckoutStarted(checkoutActor)
           context.log.info("nonEmpty Received message: {}", message)
           checkoutActor ! TypedCheckout.StartCheckout
           inCheckout(cart)

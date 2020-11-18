@@ -1,6 +1,6 @@
 package EShop.lab2
 
-import EShop.lab3.{TypedOrderManager, TypedPayment}
+import EShop.lab3.{TypedPayment}
 import akka.actor.Cancellable
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
@@ -16,7 +16,8 @@ object TypedCheckout {
   case class SelectDeliveryMethod(method: String)                                                 extends Command
   case object CancelCheckout                                                                      extends Command
   case object ExpireCheckout                                                                      extends Command
-  case class SelectPayment(payment: String, orderManagerRef: ActorRef[TypedOrderManager.Command]) extends Command
+  case class SelectPayment(payment: String, orderManagerCheckoutRef: ActorRef[Event],
+                           orderManagerPaymentRef: ActorRef[TypedPayment.Event])                  extends Command
   case object ExpirePayment                                                                       extends Command
   case object ConfirmPaymentReceived                                                              extends Command
 
@@ -70,11 +71,11 @@ class TypedCheckout(
     Behaviors.receive(
       (context, message) =>
         message match {
-          case SelectPayment(payment, orderManager) =>
+          case SelectPayment(payment,  orderManagerCheckoutRef, orderManagerPaymentRef) =>
             timer.cancel()
-            orderManager ! TypedOrderManager.ConfirmPaymentStarted(
-              context.spawn(new TypedPayment(payment, orderManager, context.self).start, "payment")
-            )
+            orderManagerCheckoutRef ! PaymentStarted(
+              context.spawn(new TypedPayment(payment, orderManagerPaymentRef, context.self).start,
+                "payment"))
             processingPayment(context.scheduleOnce(paymentTimerDuration, context.self, ExpirePayment))
           case CancelCheckout => cancelled
           case ExpireCheckout => cancelled
