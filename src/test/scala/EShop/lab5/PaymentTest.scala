@@ -1,5 +1,6 @@
 package EShop.lab5
 
+import EShop.lab3.OrderManager.ConfirmPaymentReceived
 import EShop.lab3.Payment.{DoPayment, PaymentConfirmed}
 import EShop.lab5.Payment.{PaymentRejected, PaymentRestarted}
 import PaymentServiceServer.PaymentServiceServer
@@ -36,7 +37,7 @@ class PaymentTest
 
     manager.expectMsg(PaymentRestarted)
     manager.expectMsg(PaymentRestarted)
-    manager.expectMsg(PaymentConfirmed)
+    manager.expectMsg(ConfirmPaymentReceived)
     server.system.terminate()
   }
 

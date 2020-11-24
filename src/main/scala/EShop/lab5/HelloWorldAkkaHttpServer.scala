@@ -43,14 +43,13 @@ class AkkaHttpServer extends HttpApp with JsonSupport {
         parameters("brand".as[String], "words".as[String]) { (brand, words) =>
           val query = GetItems(brand, words.split(" ").toList)
           val productCatalog = system.actorSelection("akka.tcp://ProductCatalog@127.0.0.1:2553/user/productcatalog")
-          complete {
-            productCatalog.ask(query).map {
-              case i: Items => Some(i)
-              case _        => None
-            }
+          val future = productCatalog ? query
+          onSuccess(future) {
+            case items: ProductCatalog.Items => complete(items)
           }
         }
       }
     }
   }
 }
+
