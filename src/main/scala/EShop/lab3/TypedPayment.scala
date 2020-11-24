@@ -22,6 +22,16 @@ class TypedPayment(
 
   import TypedPayment._
 
-  def start: Behavior[TypedPayment.Command] = ???
+  def start: Behavior[TypedPayment.Command] = Behaviors.receive { (context, message) =>
+    message match {
+      case DoPayment =>
+        checkout ! TypedCheckout.ReceivePayment
+        orderManager ! TypedOrderManager.ConfirmPaymentReceived
+        Behaviors.same
+      case _ =>
+        context.log.info("Received unknown message: {}", message)
+        Behaviors.same
+    }
+  }
 
 }

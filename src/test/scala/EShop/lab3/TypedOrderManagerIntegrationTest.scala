@@ -40,7 +40,7 @@ class TypedOrderManagerIntegrationTest
 
     sendMessage(orderManager, SelectDeliveryAndPaymentMethod("paypal", "inpost", _))
 
-    sendMessage(orderManager, ref => Pay(ref))
+    sendMessage(orderManager, Pay)
   }
 
 }

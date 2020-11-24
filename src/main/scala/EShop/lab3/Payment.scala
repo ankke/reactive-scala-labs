@@ -12,7 +12,6 @@ object Payment {
 
   def props(method: String, orderManager: ActorRef, checkout: ActorRef) =
     Props(new Payment(method, orderManager, checkout))
-
 }
 
 class Payment(
