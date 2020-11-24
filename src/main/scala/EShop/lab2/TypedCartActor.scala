@@ -15,8 +15,8 @@ object TypedCartActor {
   case class RemoveItem(item: Any)                                               extends Command
   case object ExpireCart                                                         extends Command
   case class StartCheckout(orderManagerRef: ActorRef[TypedOrderManager.Command]) extends Command
-  case object ConfirmCheckoutCancelled                                           extends Command
-  case object ConfirmCheckoutClosed                                              extends Command
+  case object CancelCheckout                                                     extends Command
+  case object CloseCheckout                                                      extends Command
   case class GetItems(sender: ActorRef[Cart])                                    extends Command
 
   sealed trait Event
@@ -44,12 +44,12 @@ class TypedCartActor {
 
   val cartTimerDuration: FiniteDuration = 5 seconds
 
-  private def scheduleTimer(context: ActorContext[TypedCartActor.Command]): Cancellable =
+  private def scheduleTimer(context: ActorContext[Command]): Cancellable =
     context.scheduleOnce(cartTimerDuration, context.self, ExpireCart)
 
-  def start: Behavior[TypedCartActor.Command] = empty
+  def start: Behavior[Command] = empty
 
-  def empty: Behavior[TypedCartActor.Command] =
+  def empty: Behavior[Command] =
     Behaviors.receive(
       (context, message) =>
         message match {
@@ -60,7 +60,7 @@ class TypedCartActor {
       }
     )
 
-  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[TypedCartActor.Command] = Behaviors.receive {
+  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[Command] = Behaviors.receive {
     (context, message) =>
       context.log.info("nonEmpty Received message: {}", message)
       message match {
@@ -82,12 +82,12 @@ class TypedCartActor {
       }
   }
 
-  def inCheckout(cart: Cart): Behavior[TypedCartActor.Command] =
+  def inCheckout(cart: Cart): Behavior[Command] =
     Behaviors.receive(
       (context, message) =>
         message match {
-          case ConfirmCheckoutCancelled => nonEmpty(cart, scheduleTimer(context))
-          case ConfirmCheckoutClosed    => empty
+          case CancelCheckout => nonEmpty(cart, scheduleTimer(context))
+          case CloseCheckout    => empty
           case _ =>
             context.log.info("Received unknown message: {}", message)
             Behaviors.same

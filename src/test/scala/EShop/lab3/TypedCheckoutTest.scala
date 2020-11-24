@@ -1,6 +1,5 @@
 package EShop.lab3
 
-import EShop.lab2.TypedCartActor.ConfirmCheckoutClosed
 import EShop.lab2.{TypedCartActor, TypedCheckout}
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.BeforeAndAfterAll
@@ -28,8 +27,8 @@ class TypedCheckoutTest
     checkoutActor ! StartCheckout
     checkoutActor ! SelectDeliveryMethod("order")
     checkoutActor ! SelectPayment("paypal", orderManagerActorProbe.ref)
-    checkoutActor ! ConfirmPaymentReceived
-    cartActorProbe.expectMessage(ConfirmCheckoutClosed)
+    checkoutActor ! ReceivePayment
+    cartActorProbe.expectMessage(TypedCartActor.CloseCheckout)
   }
 
 }

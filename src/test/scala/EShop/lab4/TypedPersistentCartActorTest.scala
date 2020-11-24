@@ -95,7 +95,7 @@ class TypedPersistentCartActorTest
     resultStartCheckout.state.isInstanceOf[InCheckout] shouldBe true
 
     val resultCancelCheckout =
-      eventSourcedTestKit.runCommand(ConfirmCheckoutCancelled)
+      eventSourcedTestKit.runCommand(CancelCheckout)
 
     resultCancelCheckout.event shouldBe CheckoutCancelled
     resultCancelCheckout.state.isInstanceOf[NonEmpty] shouldBe true
@@ -114,7 +114,7 @@ class TypedPersistentCartActorTest
     resultStartCheckout.state.isInstanceOf[InCheckout] shouldBe true
 
     val resultCloseCheckout =
-      eventSourcedTestKit.runCommand(ConfirmCheckoutClosed)
+      eventSourcedTestKit.runCommand(CloseCheckout)
 
     resultCloseCheckout.event shouldBe CheckoutClosed
     resultCloseCheckout.state shouldBe Empty
@@ -190,7 +190,7 @@ class TypedPersistentCartActorTest
     restartResult.state.cart shouldEqual Cart.empty.addItem("Cymbelin")
 
     val resultCancelCheckout =
-      eventSourcedTestKit.runCommand(ConfirmCheckoutCancelled)
+      eventSourcedTestKit.runCommand(CancelCheckout)
 
 
     resultCancelCheckout.event shouldBe CheckoutCancelled
@@ -215,7 +215,7 @@ class TypedPersistentCartActorTest
     restartResult.state.cart shouldEqual Cart.empty.addItem("Cymbelin")
 
     val resultCancelCheckout =
-      eventSourcedTestKit.runCommand(ConfirmCheckoutClosed)
+      eventSourcedTestKit.runCommand(CloseCheckout)
 
 
     resultCancelCheckout.event shouldBe CheckoutClosed

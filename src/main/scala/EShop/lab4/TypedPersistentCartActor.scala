@@ -1,11 +1,9 @@
 package EShop.lab4
 
-import java.time.Instant
-
 import EShop.lab2.{Cart, TypedCheckout}
 import EShop.lab3.TypedOrderManager
 import akka.actor.Cancellable
-import akka.actor.typed.{Behavior}
+import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
@@ -75,8 +73,8 @@ class TypedPersistentCartActor {
         }
       case InCheckout(cart) =>
         command match {
-          case ConfirmCheckoutCancelled => Effect.persist(CheckoutCancelled)
-          case ConfirmCheckoutClosed    => Effect.persist(CheckoutClosed)
+          case CancelCheckout => Effect.persist(CheckoutCancelled)
+          case CloseCheckout    => Effect.persist(CheckoutClosed)
           case GetItems(sender) =>
             sender ! cart
             Effect.none

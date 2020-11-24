@@ -183,7 +183,7 @@ class TypedPersistentCheckoutTest
 
     Thread.sleep(2000)
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
 
     resultReceivePayment.hasNoEvents shouldBe true
     resultReceivePayment.state shouldBe Cancelled
@@ -205,7 +205,7 @@ class TypedPersistentCheckoutTest
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
     resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed
@@ -227,7 +227,7 @@ class TypedPersistentCheckoutTest
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
     resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed
@@ -281,7 +281,7 @@ class TypedPersistentCheckoutTest
 
     Thread.sleep(1200)
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
 
     resultReceivePayment.state shouldBe Cancelled
   }
@@ -323,7 +323,7 @@ class TypedPersistentCheckoutTest
     val restartResult_2 = eventSourcedTestKit.restart()
     restartResult_2.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed

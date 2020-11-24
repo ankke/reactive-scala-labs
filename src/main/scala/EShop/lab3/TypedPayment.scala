@@ -25,7 +25,7 @@ class TypedPayment(
   def start: Behavior[TypedPayment.Command] = Behaviors.receive { (context, message) =>
     message match {
       case DoPayment =>
-        checkout ! TypedCheckout.ConfirmPaymentReceived
+        checkout ! TypedCheckout.ReceivePayment
         orderManager ! TypedOrderManager.ConfirmPaymentReceived
         Behaviors.same
       case _ =>
