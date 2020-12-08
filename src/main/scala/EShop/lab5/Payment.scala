@@ -6,7 +6,6 @@ import EShop.lab5.Payment.{PaymentRejected, PaymentRestarted}
 import EShop.lab5.PaymentService.{PaymentClientError, PaymentServerError, PaymentSucceeded}
 import akka.actor.SupervisorStrategy.{Escalate, Restart, Stop}
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props}
-import akka.stream.StreamTcpException
 
 import scala.concurrent.duration._
 

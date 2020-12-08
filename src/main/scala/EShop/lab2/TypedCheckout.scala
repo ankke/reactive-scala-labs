@@ -6,7 +6,6 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import cats.implicits.catsSyntaxOptionId
 
-
 import scala.language.postfixOps
 import scala.concurrent.duration._
 
@@ -19,7 +18,7 @@ object TypedCheckout {
   case object ExpireCheckout                                                                      extends Command
   case class SelectPayment(payment: String, orderManagerRef: ActorRef[TypedOrderManager.Command]) extends Command
   case object ExpirePayment                                                                       extends Command
-  case object ReceivePayment                                                                      extends Command
+  case object ConfirmPaymentReceived                                                              extends Command
 
   sealed trait Event
   case object CheckOutClosed                                         extends Event
@@ -91,9 +90,9 @@ class TypedCheckout(
 
   def processingPayment(timer: Cancellable): Behavior[TypedCheckout.Command] = Behaviors.receive { (context, message) =>
     message match {
-      case ReceivePayment =>
+      case ConfirmPaymentReceived =>
         timer.cancel()
-        cartActor ! TypedCartActor.CloseCheckout
+        cartActor ! TypedCartActor.ConfirmCheckoutClosed
         closed
       case CancelCheckout =>
         timer.cancel()

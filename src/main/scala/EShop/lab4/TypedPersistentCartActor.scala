@@ -73,8 +73,8 @@ class TypedPersistentCartActor {
         }
       case InCheckout(cart) =>
         command match {
-          case CancelCheckout => Effect.persist(CheckoutCancelled)
-          case CloseCheckout    => Effect.persist(CheckoutClosed)
+          case ConfirmCheckoutCancelled => Effect.persist(CheckoutCancelled)
+          case ConfirmCheckoutClosed    => Effect.persist(CheckoutClosed)
           case GetItems(sender) =>
             sender ! cart
             Effect.none

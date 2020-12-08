@@ -69,10 +69,10 @@ class TypedPersistentCheckout {
 
       case ProcessingPayment(_) =>
         command match {
-          case ReceivePayment =>
+          case ConfirmPaymentReceived =>
             Effect
               .persist(CheckOutClosed)
-              .thenRun(_ => cartActor ! TypedCartActor.CloseCheckout)
+              .thenRun(_ => cartActor ! TypedCartActor.ConfirmCheckoutClosed)
           case ExpirePayment  => Effect.persist(CheckoutCancelled)
           case CancelCheckout => Effect.persist(CheckoutCancelled)
           case message =>

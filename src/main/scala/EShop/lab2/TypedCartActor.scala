@@ -15,8 +15,8 @@ object TypedCartActor {
   case class RemoveItem(item: Any)                                               extends Command
   case object ExpireCart                                                         extends Command
   case class StartCheckout(orderManagerRef: ActorRef[TypedOrderManager.Command]) extends Command
-  case object CancelCheckout                                                     extends Command
-  case object CloseCheckout                                                      extends Command
+  case object ConfirmCheckoutCancelled                                           extends Command
+  case object ConfirmCheckoutClosed                                              extends Command
   case class GetItems(sender: ActorRef[Cart])                                    extends Command
 
   sealed trait Event
@@ -86,8 +86,8 @@ class TypedCartActor {
     Behaviors.receive(
       (context, message) =>
         message match {
-          case CancelCheckout => nonEmpty(cart, scheduleTimer(context))
-          case CloseCheckout    => empty
+          case ConfirmCheckoutCancelled => nonEmpty(cart, scheduleTimer(context))
+          case ConfirmCheckoutClosed    => empty
           case _ =>
             context.log.info("Received unknown message: {}", message)
             Behaviors.same

@@ -27,8 +27,8 @@ class TypedCheckoutTest
     checkoutActor ! StartCheckout
     checkoutActor ! SelectDeliveryMethod("order")
     checkoutActor ! SelectPayment("paypal", orderManagerActorProbe.ref)
-    checkoutActor ! ReceivePayment
-    cartActorProbe.expectMessage(TypedCartActor.CloseCheckout)
+    checkoutActor ! ConfirmPaymentReceived
+    cartActorProbe.expectMessage(TypedCartActor.ConfirmCheckoutClosed)
   }
 
 }

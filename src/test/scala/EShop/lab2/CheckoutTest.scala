@@ -1,6 +1,6 @@
 package EShop.lab2
 
-import EShop.lab3.TypedOrderManager
+import EShop.lab3.OrderManager
 import akka.actor.{ActorRef, ActorSystem, Cancellable, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import org.scalatest.BeforeAndAfterAll
@@ -100,7 +100,7 @@ class CheckoutTest
     checkoutActor ! SelectPayment(paymentMethod)
     fishForMessage() {
       case m: String if m == processingPaymentMsg => true
-      case _: TypedOrderManager.ConfirmPaymentStarted  => false
+      case _: OrderManager.ConfirmPaymentStarted  => false
     }
   }
 
@@ -114,7 +114,7 @@ class CheckoutTest
     checkoutActor ! SelectPayment(paymentMethod)
     fishForMessage() {
       case m: String if m == processingPaymentMsg => true
-      case _: TypedOrderManager.ConfirmPaymentStarted  => false
+      case _: OrderManager.ConfirmPaymentStarted  => false
     }
     checkoutActor ! CancelCheckout
     expectMsg(cancelledMsg)
@@ -136,7 +136,7 @@ class CheckoutTest
     checkoutActor ! ConfirmPaymentReceived
     fishForMessage() {
       case m: String if m == cancelledMsg        => true
-      case _: TypedOrderManager.ConfirmPaymentStarted => false
+      case _: OrderManager.ConfirmPaymentStarted => false
     }
   }
 
@@ -150,7 +150,7 @@ class CheckoutTest
     checkoutActor ! SelectPayment(paymentMethod)
     fishForMessage() {
       case m: String if m == processingPaymentMsg => true
-      case _: TypedOrderManager.ConfirmPaymentStarted  => false
+      case _: OrderManager.ConfirmPaymentStarted  => false
     }
     checkoutActor ! ConfirmPaymentReceived
     expectMsg(closedMsg)
@@ -166,7 +166,7 @@ class CheckoutTest
     checkoutActor ! SelectPayment(paymentMethod)
     fishForMessage() {
       case m: String if m == processingPaymentMsg => true
-      case _: TypedOrderManager.ConfirmPaymentStarted  => false
+      case _: OrderManager.ConfirmPaymentStarted  => false
     }
     checkoutActor ! ConfirmPaymentReceived
     expectMsg(closedMsg)

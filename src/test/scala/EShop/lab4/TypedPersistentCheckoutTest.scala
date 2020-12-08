@@ -140,7 +140,6 @@ class TypedPersistentCheckoutTest
     val resultSelectPayment = eventSourcedTestKit.runCommand(SelectPayment(paymentMethod, orderManagerProbe.ref))
 
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
-    resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
   }
 
   it should "be in cancelled state after cancel message received in processingPayment State" in {
@@ -157,7 +156,6 @@ class TypedPersistentCheckoutTest
     val resultSelectPayment = eventSourcedTestKit.runCommand(SelectPayment(paymentMethod, orderManagerProbe.ref))
 
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
-    resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
     val resultCancelCheckout = eventSourcedTestKit.runCommand(CancelCheckout)
 
@@ -179,11 +177,10 @@ class TypedPersistentCheckoutTest
     val resultSelectPayment = eventSourcedTestKit.runCommand(SelectPayment(paymentMethod, orderManagerProbe.ref))
 
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
-    resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
     Thread.sleep(2000)
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
     resultReceivePayment.hasNoEvents shouldBe true
     resultReceivePayment.state shouldBe Cancelled
@@ -203,9 +200,8 @@ class TypedPersistentCheckoutTest
     val resultSelectPayment = eventSourcedTestKit.runCommand(SelectPayment(paymentMethod, orderManagerProbe.ref))
 
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
-    resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed
@@ -225,9 +221,8 @@ class TypedPersistentCheckoutTest
     val resultSelectPayment = eventSourcedTestKit.runCommand(SelectPayment(paymentMethod, orderManagerProbe.ref))
 
     resultSelectPayment.event.isInstanceOf[PaymentStarted] shouldBe true
-    resultSelectPayment.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed
@@ -281,7 +276,7 @@ class TypedPersistentCheckoutTest
 
     Thread.sleep(1200)
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
     resultReceivePayment.state shouldBe Cancelled
   }
@@ -323,7 +318,7 @@ class TypedPersistentCheckoutTest
     val restartResult_2 = eventSourcedTestKit.restart()
     restartResult_2.state.isInstanceOf[ProcessingPayment] shouldBe true
 
-    val resultReceivePayment = eventSourcedTestKit.runCommand(ReceivePayment)
+    val resultReceivePayment = eventSourcedTestKit.runCommand(ConfirmPaymentReceived)
 
     resultReceivePayment.event shouldBe CheckOutClosed
     resultReceivePayment.state shouldBe Closed
