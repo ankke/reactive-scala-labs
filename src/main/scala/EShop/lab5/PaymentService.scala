@@ -24,15 +24,17 @@ class PaymentService(method: String, payment: ActorRef) extends Actor with Actor
   private val http = Http(context.system)
   private val URI  = getURI
 
-  override def preStart(): Unit = http.singleRequest(HttpRequest(uri=URI)).pipeTo(self)
+  override def preStart(): Unit = http.singleRequest(HttpRequest(uri = URI)).pipeTo(self)
 
   override def receive: Receive = LoggingReceive {
-    case HttpResponse(code, _, _, _) => code.intValue() match {
-      case 200 => payment ! PaymentSucceeded
-        context.stop(self)
-      case 400 | 404 => throw new PaymentClientError
-      case 408 | 418 | 500 => throw new PaymentServerError
-    }
+    case HttpResponse(code, _, _, _) =>
+      code.intValue() match {
+        case 200 =>
+          payment ! PaymentSucceeded
+          context.stop(self)
+        case 400 | 404       => throw new PaymentClientError
+        case 408 | 418 | 500 => throw new PaymentServerError
+      }
   }
 
   private def getURI: String = method match {

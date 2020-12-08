@@ -18,13 +18,15 @@ object Payment {
 }
 
 class Payment(
-               method: String,
-               orderManager: ActorRef,
-               checkout: ActorRef
-             ) extends Actor with ActorLogging {
+  method: String,
+  orderManager: ActorRef,
+  checkout: ActorRef
+) extends Actor
+  with ActorLogging {
 
-  override def receive: Receive  = LoggingReceive {
-    case DoPayment => orderManager ! OrderManager.ConfirmPaymentReceived
+  override def receive: Receive = LoggingReceive {
+    case DoPayment =>
+      orderManager ! OrderManager.ConfirmPaymentReceived
       checkout ! Checkout.ConfirmPaymentReceived
     case message => log.info(s"Received unknown message: $message")
   }

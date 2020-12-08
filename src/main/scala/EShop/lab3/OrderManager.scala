@@ -1,4 +1,3 @@
-
 package EShop.lab3
 
 import EShop.lab2.{CartActor, Checkout}
@@ -9,7 +8,6 @@ import akka.util.Timeout
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
-
 
 object OrderManager {
 
@@ -29,7 +27,7 @@ object OrderManager {
 
 class OrderManager extends Actor with ActorLogging {
 
-  implicit val timeout: Timeout = 1.second
+  implicit val timeout: Timeout                     = 1.second
   implicit val dispatcher: ExecutionContextExecutor = context.dispatcher
 
   override def receive: Receive = uninitialized
@@ -40,18 +38,21 @@ class OrderManager extends Actor with ActorLogging {
   }
 
   def open(cartActor: ActorRef): Receive = LoggingReceive {
-    case AddItem(id) => cartActor ! CartActor.AddItem(id)
+    case AddItem(id) =>
+      cartActor ! CartActor.AddItem(id)
       sender ! Done
-    case RemoveItem(id) => cartActor ! CartActor.RemoveItem(id)
+    case RemoveItem(id) =>
+      cartActor ! CartActor.RemoveItem(id)
       sender ! Done
-    case Buy => context.become(inCheckout(cartActor, sender))
+    case Buy     => context.become(inCheckout(cartActor, sender))
     case message => log.info(s"Received unknown message: $message")
   }
 
   def inCheckout(cartActorRef: ActorRef, senderRef: ActorRef): Receive = {
     cartActorRef ! CartActor.StartCheckout
     LoggingReceive {
-      case ConfirmCheckoutStarted(checkoutRef) => senderRef ! Done
+      case ConfirmCheckoutStarted(checkoutRef) =>
+        senderRef ! Done
         context.become(inCheckout(checkoutRef))
       case message => log.info(s"Received unknown message: $message")
     }
@@ -66,15 +67,18 @@ class OrderManager extends Actor with ActorLogging {
   }
 
   def inPayment(senderRef: ActorRef): Receive = LoggingReceive {
-    case ConfirmPaymentStarted(paymentRef) => senderRef ! Done
+    case ConfirmPaymentStarted(paymentRef) =>
+      senderRef ! Done
       context.become(inPayment(paymentRef, senderRef))
     case message => log.info(s"Received unknown message: $message")
   }
 
   def inPayment(paymentActorRef: ActorRef, senderRef: ActorRef): Receive = LoggingReceive {
-    case Pay => paymentActorRef ! Payment.DoPayment
+    case Pay =>
+      paymentActorRef ! Payment.DoPayment
       context.become(inPayment(paymentActorRef, sender))
-    case ConfirmPaymentReceived => senderRef ! Done
+    case ConfirmPaymentReceived =>
+      senderRef ! Done
       context.become(finished)
     case message => log.info(s"Received unknown message: $message")
   }
