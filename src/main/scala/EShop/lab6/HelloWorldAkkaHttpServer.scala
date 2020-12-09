@@ -47,8 +47,8 @@ class AkkaHttpServer(config_name: String) extends HttpApp with JsonSupportCluste
           val query  = GetItems(brand, words.split(" ").toList)
           val future = productCatalog ? query
           onComplete(future) {
-            case Success(value : ProductCatalog.Items) => complete(value)
-            case Failure(error) => complete(error.getMessage())
+            case Success(value: ProductCatalog.Items) => complete(value)
+            case Failure(error)                       => complete(error.getMessage())
           }
         }
       }

@@ -5,11 +5,11 @@ import io.gatling.http.Predef.http
 
 import scala.concurrent.duration._
 
-class HttpWorkerGatlingTest extends Simulation {
+class HttpWorkerGatlingClusterTest extends Simulation {
   val feeder = csv("/Users/ania/studia/scala/reactive-scala-labs-templates/src/it/resources/data/search.csv").random
 
-  val httpProtocol = http
-    .baseUrls("http://localhost:9000")
+  val httpProtocol = http  //values here are adjusted to cluster_demo.sh script
+    .baseUrls("http://localhost:9006", "http://localhost:9007", "http://localhost:9005")
     .doNotTrackHeader("1")
     .acceptLanguageHeader("en-US,en;q=0.5")
     .acceptEncodingHeader("gzip, deflate")
