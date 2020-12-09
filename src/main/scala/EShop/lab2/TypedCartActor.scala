@@ -60,26 +60,25 @@ class TypedCartActor {
       }
     )
 
-  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[Command] = Behaviors.receive {
-    (context, message) =>
-      context.log.info("nonEmpty Received message: {}", message)
-      message match {
-        case AddItem(item)                            => nonEmpty(cart.addItem(item), timer)
-        case RemoveItem(item) if !cart.contains(item) => Behaviors.same
-        case RemoveItem(_) if cart.size == 1          => empty
-        case RemoveItem(item)                         => nonEmpty(cart.removeItem(item), timer)
-        case StartCheckout(orderManager) =>
-          context.log.info("nonEmpty Received message: {}", message)
-          val checkoutActor = context.spawn(new TypedCheckout(context.self).start, "checkout")
-          orderManager ! TypedOrderManager.ConfirmCheckoutStarted(checkoutActor)
-          context.log.info("nonEmpty Received message: {}", message)
-          checkoutActor ! TypedCheckout.StartCheckout
-          inCheckout(cart)
-        case ExpireCart => empty
-        case _ =>
-          context.log.info("Received unknown message: {}", message)
-          Behaviors.same
-      }
+  def nonEmpty(cart: Cart, timer: Cancellable): Behavior[Command] = Behaviors.receive { (context, message) =>
+    context.log.info("nonEmpty Received message: {}", message)
+    message match {
+      case AddItem(item)                            => nonEmpty(cart.addItem(item), timer)
+      case RemoveItem(item) if !cart.contains(item) => Behaviors.same
+      case RemoveItem(_) if cart.size == 1          => empty
+      case RemoveItem(item)                         => nonEmpty(cart.removeItem(item), timer)
+      case StartCheckout(orderManager) =>
+        context.log.info("nonEmpty Received message: {}", message)
+        val checkoutActor = context.spawn(new TypedCheckout(context.self).start, "checkout")
+        orderManager ! TypedOrderManager.ConfirmCheckoutStarted(checkoutActor)
+        context.log.info("nonEmpty Received message: {}", message)
+        checkoutActor ! TypedCheckout.StartCheckout
+        inCheckout(cart)
+      case ExpireCart => empty
+      case _ =>
+        context.log.info("Received unknown message: {}", message)
+        Behaviors.same
+    }
   }
 
   def inCheckout(cart: Cart): Behavior[Command] =

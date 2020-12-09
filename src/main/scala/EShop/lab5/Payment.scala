@@ -28,7 +28,8 @@ class Payment(
 
   override def receive: Receive = {
     case DoPayment => context.actorOf(PaymentService.props(method, self))
-    case PaymentSucceeded => orderManager ! ConfirmPaymentReceived
+    case PaymentSucceeded =>
+      orderManager ! ConfirmPaymentReceived
       checkout ! PaymentConfirmed
     case message => log.info("Received unknown message: {}", message)
   }
